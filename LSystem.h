@@ -3,6 +3,7 @@
 #include <vector>
 #include "Properties.h"
 #include "Production.h"
+#include "Turtle.h"
 
 
 class LSystem
@@ -13,7 +14,7 @@ public:
     virtual ~LSystem(){}
 
     virtual void Read(const char * path);
-    double ParseFloat(std::string & s);
+    double ParseNumber(std::string & s);
     char * Derive();
 
     Production GetProductions(std::string & s);
@@ -22,8 +23,7 @@ public:
     std::vector<Production> productions;
 
     void ApplyProduction(char **curHandle, char **nextHandle, Production *prodPtr);
-
-
-
     Production *FindProd(char *curPtr);
+
+	void Draw(Turtle & turtle, char * instructions, Properties & properties);
 };

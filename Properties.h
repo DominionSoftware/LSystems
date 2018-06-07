@@ -8,13 +8,13 @@ class Properties
 {
 public:
 
-    Properties() : length(0),angle(0),scale(1.0)
+    Properties() : length(0),angleFactor(0),scale(1.0)
     {
 
     }
 
     double length;
-    double angle;
+    int angleFactor;
     double scale;
     std::string axiom;
     std::string ignore;

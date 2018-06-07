@@ -6,13 +6,15 @@
 #include <exception>
 #include <algorithm>
 #include <regex>
+#include <stack>
+
 
 LSystem::LSystem()
 {
 
 }
 
-double LSystem::ParseFloat(std::string & s)
+double LSystem::ParseNumber(std::string & s)
 {
     std::regex base_regex{"[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)"};
     std::smatch results;
@@ -160,6 +162,8 @@ char * LSystem::Derive()
 
     return(string1);
 }
+
+
 void LSystem::Read(const char *path)
 {
 
@@ -209,7 +213,7 @@ void LSystem::Read(const char *path)
         if (found!=std::string::npos)
         {
             std::string temp = text.substr(found + strlen("DERIVATIONLENGTH:"));
-            properties.length = ParseFloat(temp);
+            properties.length = ParseNumber(temp);
             continue;
         }
 
@@ -217,7 +221,7 @@ void LSystem::Read(const char *path)
         if (found!=std::string::npos)
         {
             std::string temp = text.substr(found + strlen("ANGLEFACTOR:"));
-            properties.angle = ParseFloat(temp);
+            properties.angleFactor = static_cast<int>(ParseNumber(temp));
             continue;
         }
 
@@ -225,7 +229,7 @@ void LSystem::Read(const char *path)
         if (found!=std::string::npos)
         {
             std::string temp = text.substr(found + strlen("SCALEFACTOR:"));
-            properties.scale = ParseFloat(temp);
+            properties.scale = ParseNumber(temp);
         }
         found = text.find("AXIOM:");
         if (found!=std::string::npos)
@@ -251,3 +255,94 @@ void LSystem::Read(const char *path)
 
 
 }
+
+void LSystem::Draw(Turtle & turtle, char * instructions, Properties & properties)
+{
+	std::stack<Turtle> stack;
+
+	double ang = -TWO_PI / 4;
+
+	std::vector<double> sin;
+	std::vector<double> cos;
+
+	for (int i = 0; i < properties.angleFactor; i++)
+	{
+		sin.push_back(std::sin(ang));
+		cos.push_back(std::cos(ang));
+		ang += TWO_PI / properties.angleFactor;
+
+	}
+	auto halfangFac = properties.angleFactor / 2;
+
+	turtle.direction = 0;
+
+	char * str = instructions;
+	char c;
+	while ((c = *str++) != 0) {
+		switch (c)
+		{
+		case '+':
+		{
+			if (turtle.direction < properties.angleFactor)
+			{
+				++turtle.direction;
+			}
+
+			else
+			{
+				turtle.direction = 0;
+			}
+		}
+		break;
+
+		case '-':
+		{
+			if (turtle.direction > 0)
+			{
+				--turtle.direction;
+			}
+			else
+			{
+				turtle.direction = properties.angleFactor;
+			}
+		}
+		break;
+		case'|':
+		{
+			if (turtle.direction >= halfangFac)
+			{
+				turtle.direction -= halfangFac;
+			}
+			else
+			{
+				turtle.direction += halfangFac;
+			}
+			break;
+		case '[':
+		{
+			stack.push(turtle);
+		}
+		break;
+		case 'F':
+		{
+			turtle.x += cos[turtle.direction];
+			turtle.y += sin[turtle.direction];
+			//if (flag) LineTo((short)(tu.x), (short)(tu.y)); else BoxUpdate(&tu, boxPtr); break;
+		}
+		break;
+
+
+		case 'f':
+		{
+			turtle.x += cos[turtle.direction];
+			turtle.y += sin[turtle.direction];
+			//if (flag) MoveTo((short)(tu.x), (short)(tu.y)); else BoxUpdate(&tu, boxPtr); 
+		}
+		break;
+		default:
+			break;
+		}
+		}
+	}
+
+} 
