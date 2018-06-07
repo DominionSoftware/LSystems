@@ -14,7 +14,7 @@ public:
 
     virtual void Read(const char * path);
     double ParseFloat(std::string & s);
-    char* Derive();
+    char * Derive();
 
     Production GetProductions(std::string & s);
 

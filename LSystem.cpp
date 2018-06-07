@@ -1,5 +1,6 @@
 #include "LSystem.h"
 #include "Production.h"
+#include <sstream>
 #include <iostream>
 #include <fstream>
 #include <exception>
@@ -118,29 +119,28 @@ char * LSystem::Derive()
 {
     int n = (int)this->properties.length;
     std::string curr = this->properties.axiom;
-    char *string1, *string2;
-    if ((string1 = (char*)malloc(MAXSTR)) == NULL) {
-        printf("pfg: can’t allocate string1\n");
-        exit(1);
-    }
-    if ((string2 = (char*)malloc(MAXSTR)) == NULL) {
-        printf("pfg: can’t allocate string2\n");
-        exit(1);
-    }
-    for (int i=0; i < MAXSTR; i++)
-        *(string1+i) = *(string2+i) = 0;
+	char * string1 = new char[MAXSTR];
+	char * string2 = new char[MAXSTR];
+ 
+	 
+    
+	auto s1 = string1;
+	auto s2 = string2;
 
-    ++string1;
-    ++string2;
-    strcpy(string1, properties.axiom.c_str());
+    for (int i=0; i < MAXSTR; i++)
+        *(s1+i) = *(s2+i) = 0;
+
+    ++s1;
+    ++s2;
+    strcpy(s1, properties.axiom.c_str());
     char *curPtr, *nextPtr, *tempPtr, *limPtr;
-    limPtr = string2 + MAXSTR - MAXAXIOM;
+    limPtr = s2 + MAXSTR - MAXAXIOM;
     for (auto i = 1; i <= n; i++)
     {
-        curPtr = string1;
-        nextPtr = string2;
-        printf("%s\n",string1);
-        printf("%s\n",string2);
+        curPtr = s1;
+        nextPtr = s2;
+        //printf("%s\n",s1);
+       // printf("%s\n",s2);
         while (*curPtr != 0) {
             auto p = FindProd(curPtr);
             ApplyProduction(&curPtr, &nextPtr, p);
@@ -148,14 +148,16 @@ char * LSystem::Derive()
                 printf("String too long");
                 exit(1);
             }
-            printf("%s\n",string1);
-            printf("%s\n",string2);
+          //  printf("%s\n",s1);
+          //  printf("%s\n",s2);
             *nextPtr = 0;
         }
-        tempPtr = string1;
-        string1 = string2;
-        string2 = tempPtr;
+        tempPtr = s1;
+		s1 = s2;
+        s2 = tempPtr;
     }
+	delete[] string2;
+
     return(string1);
 }
 void LSystem::Read(const char *path)

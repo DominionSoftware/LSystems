@@ -1,8 +1,15 @@
 cmake_minimum_required(VERSION 3.11)
 project(LSystem)
 
+
+IF (WIN32)
+set(VTK_DIR "Y:/ThirdParty/vtk811.bin" CACHE PATH "VTK Bin Dir" FORCE)
+else()
 set(CMAKE_CXX_STANDARD 11)
 set(VTK_DIR "/home/rickf/projects/VTK.bin/" CACHE PATH "VTK Bin Dir" FORCE)
+endif()
+
+
 find_package(VTK COMPONENTS
         vtkCommonCore
         vtkFiltersSources
@@ -13,7 +20,7 @@ find_package(VTK COMPONENTS
 include(${VTK_USE_FILE})
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt5 COMPONENTS Core Gui 3DExtras 3DCore 3DRender OpenGL OpenGLExtensions Widgets SerialPort Network WebEngineWidgets Xml XmlPatterns Sql  Svg REQUIRED)
+find_package(Qt5 COMPONENTS Core Gui 3DExtras 3DCore 3DRender OpenGL OpenGLExtensions Widgets SerialPort Network Xml XmlPatterns Sql  Svg REQUIRED)
 find_package(OpenGL REQUIRED)
 
 
