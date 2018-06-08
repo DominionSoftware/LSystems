@@ -17,6 +17,18 @@ int main(int argc,char ** argv)
 		ls.Read(argv[1]);
 		char * derived = ls.Derive(); 
 
+
+		Box box;
+		int inc = 1;
+		ls.Draw(derived+1, ls.properties,box,&inc,0);
+	
+
+		Pixel start;
+		start.h = 0;
+		start.v = 0;
+
+		ls.SetDrawParam(box, &inc, &start);
+		ls.Draw(derived + 1, ls.properties, box, &inc, 1);
 		 
 	}
 	catch (std::exception & ex)

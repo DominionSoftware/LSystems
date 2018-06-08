@@ -7,7 +7,10 @@
 #include <algorithm>
 #include <regex>
 #include <stack>
+#include <iostream>     
+#include <fstream> 
 
+#pragma optimize("",off)
 
 LSystem::LSystem()
 {
@@ -99,23 +102,29 @@ void LSystem::ApplyProduction(char **curHandle, char **nextHandle, Production *p
 if (prodPtr != NULL)
 {
     strcpy(*nextHandle, prodPtr->getSuccessor());
-    printf("%s\n",*nextHandle);
+   // printf("%s\n",*nextHandle);
     *curHandle += prodPtr->predecessorLength();
     *nextHandle += prodPtr->successorLength();
 }
 else
     {
-    printf("%s\n",*nextHandle);
+  //  printf("%s\n",*nextHandle);
     **nextHandle = **curHandle;
-    printf("%s\n",*nextHandle);
+ //   printf("%s\n",*nextHandle);
     ++(*nextHandle);
     ++(*curHandle);
-    printf("%s\n",*nextHandle);
-    printf("%s\n",*curHandle);
+  //  printf("%s\n",*nextHandle);
+ //   printf("%s\n",*curHandle);
     }
 }
 #define MAXSTR 30000
 #define MAXAXIOM 100;
+
+const int LEFT = 2;
+const int TOP = 42;
+const int RIGHT = 510;
+const int BOTTOM = 340;
+
 
 char * LSystem::Derive()
 {
@@ -256,19 +265,62 @@ void LSystem::Read(const char *path)
 
 }
 
-void LSystem::Draw(Turtle & turtle, char * instructions, Properties & properties)
+
+void LSystem::SetDrawParam(Box & boundBox, int * incPtr, Pixel * startPtr)
 {
+	
+	double xscale, yscale, sc;
+	xscale = (RIGHT - LEFT) / (boundBox.xmax - boundBox.xmin); 
+	yscale = (BOTTOM - TOP) / (boundBox.ymax - boundBox.ymin);
+	 
+	if (xscale>yscale)
+		sc = yscale; 
+	else 
+		sc = xscale;
+	*incPtr = static_cast<int>(floor(static_cast<double>((sc * 100) / MAXSCALE)));
+	startPtr->h = static_cast<int>(RIGHT - LEFT - *incPtr * (boundBox.xmin + boundBox.xmax - 1.0)) / 2; 
+	startPtr->v = static_cast<int>(BOTTOM - TOP - *incPtr * (boundBox.ymin + boundBox.ymax - 1.0)) / 2;
+
+}
+
+
+void LSystem::BoxUpdate(Turtle & turtle, Box & box) const
+{
+	if (turtle.x < box.xmin)
+		box.xmin = turtle.x;
+	if (turtle.x > box.xmax)
+		box.xmax = turtle.x;
+	if (turtle.y < box.ymin)
+		box.ymin = turtle.y;
+	if (turtle.y > box.ymax)
+		box.ymax = turtle.y;
+}
+
+void LSystem::Draw(char * instructions, Properties & properties,  Box & box,int * inc,int flag)
+{
+
+
+	std::filebuf fb;
+
+
+	fb.open(R"(C:\Users\rickf\Documents\MATLAB\output.txt)", std::ios::out);
+	std::ostream os(&fb);
+	
+
+
+	Turtle  turtle;
 	std::stack<Turtle> stack;
 
-	double ang = -TWO_PI / 4;
-
+	double ang = -TWO_PI /4;
+ 
 	std::vector<double> sin;
 	std::vector<double> cos;
 
+
 	for (int i = 0; i < properties.angleFactor; i++)
 	{
-		sin.push_back(std::sin(ang));
-		cos.push_back(std::cos(ang));
+		sin.push_back(*inc * std::sin(ang));
+		cos.push_back(*inc * std::cos(ang));
 		ang += TWO_PI / properties.angleFactor;
 
 	}
@@ -279,70 +331,67 @@ void LSystem::Draw(Turtle & turtle, char * instructions, Properties & properties
 	char * str = instructions;
 	char c;
 	while ((c = *str++) != 0) {
+		
 		switch (c)
 		{
 		case '+':
 		{
-			if (turtle.direction < properties.angleFactor)
-			{
-				++turtle.direction;
-			}
-
-			else
-			{
-				turtle.direction = 0;
-			}
+			turtle.direction = 1;
 		}
 		break;
 
 		case '-':
 		{
-			if (turtle.direction > 0)
-			{
-				--turtle.direction;
-			}
-			else
-			{
-				turtle.direction = properties.angleFactor;
-			}
+			turtle.direction = -1;
 		}
 		break;
 		case'|':
 		{
-			if (turtle.direction >= halfangFac)
-			{
-				turtle.direction -= halfangFac;
-			}
-			else
-			{
-				turtle.direction += halfangFac;
-			}
+		}
 			break;
 		case '[':
 		{
 			stack.push(turtle);
 		}
+		case ']':
+		{
+			if (!stack.empty())
+			{
+				turtle = stack.top();
+				stack.pop();
+				turtle.Print(os,Move);
+			}
+			else
+			{
+			}
+		}
 		break;
 		case 'F':
 		{
-			turtle.x += cos[turtle.direction];
-			turtle.y += sin[turtle.direction];
-			//if (flag) LineTo((short)(tu.x), (short)(tu.y)); else BoxUpdate(&tu, boxPtr); break;
+			 
+
+			turtle.x += std::cos(turtle.direction * 45 * M_PI / 180.0);
+			turtle.y += std::sin(turtle.direction * 45 * M_PI / 180.0);
+		
+			turtle.Print(os, MoveOrDraw::Draw);
+			
+			 
 		}
 		break;
 
 
 		case 'f':
 		{
-			turtle.x += cos[turtle.direction];
-			turtle.y += sin[turtle.direction];
-			//if (flag) MoveTo((short)(tu.x), (short)(tu.y)); else BoxUpdate(&tu, boxPtr); 
+			turtle.x += std::cos(turtle.direction * 45 * M_PI / 180.0);
+			turtle.y += std::sin(turtle.direction * 45 * M_PI / 180.0);
+			turtle.Print(os, MoveOrDraw::Move);
+			
 		}
 		break;
 		default:
 			break;
 		}
-		}
+		
 	}
-
+	fb.close();
 } 

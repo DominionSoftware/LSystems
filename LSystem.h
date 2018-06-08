@@ -25,5 +25,7 @@ public:
     void ApplyProduction(char **curHandle, char **nextHandle, Production *prodPtr);
     Production *FindProd(char *curPtr);
 
-	void Draw(Turtle & turtle, char * instructions, Properties & properties);
+	void BoxUpdate(Turtle & turtle, Box & box) const;
+	void SetDrawParam(Box & boundBox, int * incPtr, Pixel * startPtr);
+	void Draw(char * instructions, Properties & properties, Box & box, int *  inc,int flag = 1);
 };
