@@ -173,6 +173,16 @@ char * LSystem::Derive()
 
     return(string1);
 }
+const std::string OR = "|";
+
+const std::string asterisk = "\\*";
+const std::string plusOrMinus = "\\+|\\-";
+const std::string decumalRange = "[0-9]";
+const std::string contextRegExp = "(" + asterisk + OR + plusOrMinus + OR + decumalRange + ")";
+
+const std::string successorRegExp = contextRegExp + OR + "\\F" + OR + "\\[" + OR + "\\]";
+const std::string whiteSpace = "\\s*";
+const std::string productionRegExp = contextRegExp + whiteSpace + "<" + contextRegExp + whiteSpace + ">" + whiteSpace + "-->" + successorRegExp;
 
 
 void LSystem::Read(const char *path)
@@ -191,7 +201,9 @@ void LSystem::Read(const char *path)
     {
         bool foundmatch = false;
         try {
-            std::regex re("[0-9]<[0-9]>[0-9]-->");
+			const char * s = productionRegExp.c_str();
+
+            std::regex re("(\\*|[0-9])\\s*<\\s*(\\-|\\+|[0-9])\\s*>\\s*(\\*|[0-9])\\s*-->\\s*(\\[|\\]|F|\\-|\\+|[0-9])\\s*");
 			std::smatch match;
             foundmatch = std::regex_search(line, match,re);
 			 
@@ -339,23 +351,42 @@ void LSystem::Draw(char * instructions, Properties & properties,  Box & box,int 
 		{
 		case '+':
 		{
-			turtle.direction = 1;
+			if (turtle.direction < properties.angleFactor - 2)
+			{
+				turtle.direction++;
+			}
+			else
+			{
+				turtle.direction = 0;
+			}
 		}
 		break;
 
 		case '-':
 		{
-			turtle.direction = -1;
+			if (turtle.direction > 0)
+			{
+				turtle.direction--;
+			}
+			else
+			{
+				turtle.direction = properties.angleFactor - 1;
+			}
 		}
 		break;
 		case'|':
 		{
+			if (turtle.direction >= halfangFac) 
+				turtle.direction -= halfangFac; 
+			else 
+				turtle.direction += halfangFac;
 		}
 			break;
 		case '[':
 		{
 			stack.push(turtle);
 		}
+		break;
 		case ']':
 		{
 			if (!stack.empty())
@@ -372,9 +403,8 @@ void LSystem::Draw(char * instructions, Properties & properties,  Box & box,int 
 		case 'F':
 		{
 			 
-
-			turtle.x += turtle.direction * std::cos(45 * M_PI / 180.0);
-			turtle.y += turtle.direction * std::sin( 45 * M_PI / 180.0);
+			turtle.x += cos[turtle.direction]; 
+			turtle.y += sin[turtle.direction];
 		
 			turtle.Print(os, MoveOrDraw::Draw);
 			
@@ -385,8 +415,8 @@ void LSystem::Draw(char * instructions, Properties & properties,  Box & box,int 
 
 		case 'f':
 		{
-			turtle.x += turtle.direction * std::cos(45 * M_PI / 180.0);
-			turtle.y += turtle.direction * std::sin(45 * M_PI / 180.0);
+			turtle.x += cos[turtle.direction];
+			turtle.y += sin[turtle.direction];
 			turtle.Print(os, MoveOrDraw::Move);
 			
 		}
