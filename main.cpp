@@ -16,6 +16,17 @@ int main(int argc,char ** argv)
 
 		ls.Read(argv[1]);
 		char * derived = ls.Derive(); 
+		std::filebuf fb;
+
+
+		fb.open(R"(C:\Users\rickf\Documents\MATLAB\derived.txt)", std::ios::out);
+		std::ostream os(&fb);
+
+		std::string d(derived + 1);
+
+		os << d << std::endl;
+
+		fb.close();
 
 
 		Box box;

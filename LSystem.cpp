@@ -101,8 +101,9 @@ void LSystem::ApplyProduction(char **curHandle, char **nextHandle, Production *p
 {
 if (prodPtr != NULL)
 {
+    printf("%s\n",*nextHandle);
     strcpy(*nextHandle, prodPtr->getSuccessor());
-   // printf("%s\n",*nextHandle);
+	printf("%s\n", *nextHandle);
     *curHandle += prodPtr->predecessorLength();
     *nextHandle += prodPtr->successorLength();
 }
@@ -110,11 +111,11 @@ else
     {
   //  printf("%s\n",*nextHandle);
     **nextHandle = **curHandle;
- //   printf("%s\n",*nextHandle);
+    printf("%s\n",*nextHandle);
     ++(*nextHandle);
     ++(*curHandle);
-  //  printf("%s\n",*nextHandle);
- //   printf("%s\n",*curHandle);
+    printf("%s\n",*nextHandle);
+    printf("%s\n",*curHandle);
     }
 }
 #define MAXSTR 30000
@@ -144,23 +145,24 @@ char * LSystem::Derive()
     ++s1;
     ++s2;
     strcpy(s1, properties.axiom.c_str());
-    char *curPtr, *nextPtr, *tempPtr, *limPtr;
-    limPtr = s2 + MAXSTR - MAXAXIOM;
+	char *curPtr;
+	char *nextPtr;
+	char *tempPtr;
+	char *limPtr;
+	limPtr = s2 + MAXSTR - MAXAXIOM;
     for (auto i = 1; i <= n; i++)
     {
         curPtr = s1;
         nextPtr = s2;
-        //printf("%s\n",s1);
-       // printf("%s\n",s2);
+      
         while (*curPtr != 0) {
+			printf("%s\n", curPtr);
             auto p = FindProd(curPtr);
             ApplyProduction(&curPtr, &nextPtr, p);
             if(nextPtr > limPtr) {
                 printf("String too long");
                 exit(1);
             }
-          //  printf("%s\n",s1);
-          //  printf("%s\n",s2);
             *nextPtr = 0;
         }
         tempPtr = s1;
@@ -189,9 +191,10 @@ void LSystem::Read(const char *path)
     {
         bool foundmatch = false;
         try {
-            std::regex re("[0-9|*|+|-|F]+<[0-9|*|+|-|F]+>[0-9|*|+|-|F]-->[0-9|*|+|-|F]+");
-            foundmatch = std::regex_search(line, re);
-
+            std::regex re("[0-9]<[0-9]>[0-9]-->");
+			std::smatch match;
+            foundmatch = std::regex_search(line, match,re);
+			 
         } catch (std::regex_error& e) {
             std::cout << e.what() << std::endl;
         }
@@ -370,8 +373,8 @@ void LSystem::Draw(char * instructions, Properties & properties,  Box & box,int 
 		{
 			 
 
-			turtle.x += std::cos(turtle.direction * 45 * M_PI / 180.0);
-			turtle.y += std::sin(turtle.direction * 45 * M_PI / 180.0);
+			turtle.x += turtle.direction * std::cos(45 * M_PI / 180.0);
+			turtle.y += turtle.direction * std::sin( 45 * M_PI / 180.0);
 		
 			turtle.Print(os, MoveOrDraw::Draw);
 			
@@ -382,8 +385,8 @@ void LSystem::Draw(char * instructions, Properties & properties,  Box & box,int 
 
 		case 'f':
 		{
-			turtle.x += std::cos(turtle.direction * 45 * M_PI / 180.0);
-			turtle.y += std::sin(turtle.direction * 45 * M_PI / 180.0);
+			turtle.x += turtle.direction * std::cos(45 * M_PI / 180.0);
+			turtle.y += turtle.direction * std::sin(45 * M_PI / 180.0);
 			turtle.Print(os, MoveOrDraw::Move);
 			
 		}
