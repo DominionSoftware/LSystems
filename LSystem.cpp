@@ -311,14 +311,15 @@ void LSystem::BoxUpdate(Turtle & turtle, Box & box) const
 		box.ymax = turtle.y;
 }
 
-void LSystem::Draw(char * instructions, Properties & properties,  Box & box,int * inc,int flag)
+void LSystem::Draw(std::string & outputFileName,char * instructions, Properties & properties,  Box & box,int * inc,int flag)
 {
 
 
 	std::filebuf fb;
 
+	std::string output = R"(C:\Users\rickf\Documents\MATLAB\)" + outputFileName;
 
-	fb.open(R"(C:\Users\rickf\Documents\MATLAB\output.txt)", std::ios::out);
+	fb.open(output.c_str(), std::ios::out);
 	std::ostream os(&fb);
 	
 
@@ -402,13 +403,9 @@ void LSystem::Draw(char * instructions, Properties & properties,  Box & box,int 
 		break;
 		case 'F':
 		{
-			 
 			turtle.x += cos[turtle.direction]; 
 			turtle.y += sin[turtle.direction];
-		
 			turtle.Print(os, MoveOrDraw::Draw);
-			
-			 
 		}
 		break;
 

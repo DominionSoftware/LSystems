@@ -27,5 +27,5 @@ public:
 
 	void BoxUpdate(Turtle & turtle, Box & box) const;
 	void SetDrawParam(Box & boundBox, int * incPtr, Pixel * startPtr);
-	void Draw(char * instructions, Properties & properties, Box & box, int *  inc,int flag = 1);
+	void Draw(std::string & outputFileName,char * instructions, Properties & properties, Box & box, int *  inc,int flag = 1);
 };
