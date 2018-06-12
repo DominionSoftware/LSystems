@@ -4,6 +4,7 @@ project(LSystem)
 
 IF (WIN32)
 set(VTK_DIR "Y:/ThirdParty/vtk811.bin" CACHE PATH "VTK Bin Dir" FORCE)
+set(ITK_DIR "Y:/ThirdParty/itk413.bin" CACHE PATH "ITK Bin Dir" FORCE)
 else()
 set(CMAKE_CXX_STANDARD 11)
 set(VTK_DIR "/home/rickf/projects/VTK.bin/" CACHE PATH "VTK Bin Dir" FORCE)
@@ -18,6 +19,12 @@ find_package(VTK COMPONENTS
         vtkInteractionImage
         )
 include(${VTK_USE_FILE})
+
+
+find_package(ITK 4.13.0 REQUIRED) 
+include(${ITK_USE_FILE})
+
+
 set(CMAKE_AUTOMOC ON)
 
 find_package(Qt5 COMPONENTS Core Gui 3DExtras 3DCore 3DRender OpenGL OpenGLExtensions Widgets SerialPort Network Xml XmlPatterns Sql  Svg REQUIRED)

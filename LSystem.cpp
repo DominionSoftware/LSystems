@@ -9,6 +9,7 @@
 #include <stack>
 #include <iostream>     
 #include <fstream> 
+#include "TransformInfo.h"
 
 #pragma optimize("",off)
 
@@ -101,9 +102,9 @@ void LSystem::ApplyProduction(char **curHandle, char **nextHandle, Production *p
 {
 if (prodPtr != NULL)
 {
-    printf("%s\n",*nextHandle);
+    //printf("%s\n",*nextHandle);
     strcpy(*nextHandle, prodPtr->getSuccessor());
-	printf("%s\n", *nextHandle);
+	//printf("%s\n", *nextHandle);
     *curHandle += prodPtr->predecessorLength();
     *nextHandle += prodPtr->successorLength();
 }
@@ -111,11 +112,11 @@ else
     {
   //  printf("%s\n",*nextHandle);
     **nextHandle = **curHandle;
-    printf("%s\n",*nextHandle);
+    //printf("%s\n",*nextHandle);
     ++(*nextHandle);
     ++(*curHandle);
-    printf("%s\n",*nextHandle);
-    printf("%s\n",*curHandle);
+  //  printf("%s\n",*nextHandle);
+  //  printf("%s\n",*curHandle);
     }
 }
 #define MAXSTR 30000
@@ -156,7 +157,7 @@ char * LSystem::Derive()
         nextPtr = s2;
       
         while (*curPtr != 0) {
-			printf("%s\n", curPtr);
+			//printf("%s\n", curPtr);
             auto p = FindProd(curPtr);
             ApplyProduction(&curPtr, &nextPtr, p);
             if(nextPtr > limPtr) {
@@ -301,19 +302,34 @@ void LSystem::SetDrawParam(Box & boundBox, int * incPtr, Pixel * startPtr)
 
 void LSystem::BoxUpdate(Turtle & turtle, Box & box) const
 {
-	if (turtle.x < box.xmin)
-		box.xmin = turtle.x;
-	if (turtle.x > box.xmax)
-		box.xmax = turtle.x;
-	if (turtle.y < box.ymin)
-		box.ymin = turtle.y;
-	if (turtle.y > box.ymax)
-		box.ymax = turtle.y;
+	if (turtle[0] < box.xmin)
+		box.xmin = turtle[0];
+	if (turtle[0]> box.xmax)
+		box.xmax = turtle[0];
+	if (turtle[1] < box.ymin)
+		box.ymin = turtle[1];
+	if (turtle[1] > box.ymax)
+		box.ymax = turtle[1];
 }
 
 void LSystem::Draw(std::string & outputFileName,char * instructions, Properties & properties,  Box & box,int * inc,int flag)
 {
+	
+	std::filebuf fb3;
 
+	std::string output3 = R"(C:\Users\rickf\Documents\MATLAB\angles.txt)";
+
+	fb3.open(output3.c_str(), std::ios::out);
+	std::ostream os3(&fb3);
+
+	
+	
+	std::filebuf fb2;
+
+	std::string output2 = R"(C:\Users\rickf\Documents\MATLAB\math.txt)";
+
+	fb2.open(output2.c_str(), std::ios::out);
+	std::ostream os2(&fb2);
 
 	std::filebuf fb;
 
@@ -328,17 +344,18 @@ void LSystem::Draw(std::string & outputFileName,char * instructions, Properties 
 	std::stack<Turtle> stack;
 
 	double ang = -TWO_PI /4;
- 
-	std::vector<double> sin;
-	std::vector<double> cos;
+	TransformInfo tInfo;
+
+	tInfo.angle.push_back(ang);
 
 
 	for (int i = 0; i < properties.angleFactor; i++)
 	{
-		sin.push_back(*inc * std::sin(ang));
-		cos.push_back(*inc * std::cos(ang));
+		tInfo.sin.push_back(*inc * std::sin(ang));
+		tInfo.cos.push_back(*inc * std::cos(ang));
 		ang += TWO_PI / properties.angleFactor;
 
+		tInfo.angle.push_back(ang);
 	}
 	auto halfangFac = properties.angleFactor / 2;
 
@@ -403,8 +420,11 @@ void LSystem::Draw(std::string & outputFileName,char * instructions, Properties 
 		break;
 		case 'F':
 		{
-			turtle.x += cos[turtle.direction]; 
-			turtle.y += sin[turtle.direction];
+			os2 << 0 << "," << turtle[0] << "," << turtle[1] << "," << tInfo.cos[turtle.direction] << "," << tInfo.sin[turtle.direction] << "," << tInfo.angle[turtle.direction] * 180.0 / M_PI << std::endl;
+
+			turtle[0] += tInfo.cos[turtle.direction];
+			turtle[1] += tInfo.sin[turtle.direction];
+			os2 << 1 << "," << turtle[0] << "," << turtle[1] << "," << tInfo.cos[turtle.direction] << "," << tInfo.sin[turtle.direction] << "," << tInfo.angle[turtle.direction] * 180.0 / M_PI << std::endl;
 			turtle.Print(os, MoveOrDraw::Draw);
 		}
 		break;
@@ -412,8 +432,10 @@ void LSystem::Draw(std::string & outputFileName,char * instructions, Properties 
 
 		case 'f':
 		{
-			turtle.x += cos[turtle.direction];
-			turtle.y += sin[turtle.direction];
+			os2 << 2 << "," << turtle[0] << "," << turtle[1] << "," << tInfo.cos[turtle.direction] << "," << tInfo.sin[turtle.direction] << "," << tInfo.angle[turtle.direction] * 180.0 / M_PI << std::endl;
+			turtle[0] += tInfo.cos[turtle.direction];
+			turtle[1] += tInfo.sin[turtle.direction];
+			os2 << 3 << "," << turtle[0] << "," << turtle[1] << "," << tInfo.cos[turtle.direction] << "," << tInfo.sin[turtle.direction] << "," << tInfo.angle[turtle.direction] * 180.0 / M_PI << std::endl;
 			turtle.Print(os, MoveOrDraw::Move);
 			
 		}
@@ -424,4 +446,12 @@ void LSystem::Draw(std::string & outputFileName,char * instructions, Properties 
 		
 	}
 	fb.close();
+	fb2.close();
+
+	for (size_t s = 0; s < tInfo.angle.size(); s++)
+	{
+		os3 << 1 << "," << tInfo.angle[s] << "," << 180 * tInfo.angle[s] / M_PI << "," << tInfo.cos[s] << "," << tInfo.sin[s] << "," << properties.angleFactor << std::endl;
+
+	}
+	fb3.close();
 } 

@@ -1,6 +1,7 @@
 #pragma once
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <vnl/vnl_vector_fixed.h>
 #include <iostream>     
 #include <fstream> 
 #include <vector>
@@ -36,19 +37,24 @@ enum MoveOrDraw
 class Turtle
 {
 public:
-	Turtle() : x(0),y(0),direction(0)
+	Turtle() :xyzw{ 0,0,0,0 }, direction(0)
 	{
 		
 	}
 
     virtual ~Turtle(){}
 
+	double& operator[] (const int index)
+	{
+		return xyzw[index];
+	}
+
 	void Print(std::ostream & os,MoveOrDraw md)
     {
-		os << md << "," << x << "," << y << "," << direction << std::endl;
+		os << md << "," << xyzw[0] << "," << xyzw[0] << "," << direction << std::endl;
     }
 
-	double x = 0;
-	double y = 0;
+	vnl_vector_fixed<double, 4> xyzw;
+
 	int direction;
 };
