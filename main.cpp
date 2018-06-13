@@ -8,7 +8,8 @@ const char * paths[] = { "D:\\Projects\\LSystems\\input.a.txt",
 "D:\\Projects\\LSystems\\input.b.txt",
 "D:\\Projects\\LSystems\\input.c.txt",
 "D:\\Projects\\LSystems\\input.d.txt",
-"D:\\Projects\\LSystems\\input.e.txt"
+"D:\\Projects\\LSystems\\input.e.txt",
+"D:\\Projects\\LSystems\\input.f.txt"
 };
 
 
@@ -22,7 +23,7 @@ int main(int argc,char ** argv)
 		}
 		
 
-		for (int i = 0; i < 5; i++)
+		for (int i = 0; i < 6; i++)
 		{
 			LSystem ls;
 			std::experimental::filesystem::path inputPath(paths[i]);

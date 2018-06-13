@@ -83,6 +83,7 @@ set (SOURCE
         Properties.h
         Production.h
 		Turtle.h
+		TransformInfo.h
         )
 
 
@@ -100,4 +101,5 @@ add_executable(LSystem
 target_link_libraries(LSystem
         ${Qt5Libraries}
     ${VTK_LIBRARIES}
+	${ITK_LIBRARIES}
         )

@@ -37,7 +37,7 @@ enum MoveOrDraw
 class Turtle
 {
 public:
-	Turtle() :xyzw{ 0,0,0,0 }, direction(0)
+	Turtle() :xyzw{ 0,0,0,0 }, xyplane(0),zplane(0)
 	{
 		
 	}
@@ -51,10 +51,11 @@ public:
 
 	void Print(std::ostream & os,MoveOrDraw md)
     {
-		os << md << "," << xyzw[0] << "," << xyzw[0] << "," << direction << std::endl;
+		os << md << "," << xyzw[0] << "," << xyzw[1] << "," << xyzw[2] << "," << xyplane << "," << zplane << std::endl;
     }
 
 	vnl_vector_fixed<double, 4> xyzw;
 
-	int direction;
+	int xyplane;
+	int zplane;
 };

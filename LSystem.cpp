@@ -10,6 +10,7 @@
 #include <iostream>     
 #include <fstream> 
 #include "TransformInfo.h"
+#include "vtkQuaternion.h"
 
 #pragma optimize("",off)
 
@@ -204,7 +205,7 @@ void LSystem::Read(const char *path)
         try {
 			const char * s = productionRegExp.c_str();
 
-            std::regex re("(\\*|[0-9])\\s*<\\s*(\\-|\\+|[0-9])\\s*>\\s*(\\*|[0-9])\\s*-->\\s*(\\[|\\]|F|\\-|\\+|[0-9])\\s*");
+            std::regex re("(\\*|[0-9])\\s*<\\s*(\\v|\\^|\\-|\\+|[0-9])\\s*>\\s*(\\*|[0-9])\\s*-->\\s*(\\[|\\]|F|\\-|\\+|\\^|\\v|[0-9])\\s*");
 			std::smatch match;
             foundmatch = std::regex_search(line, match,re);
 			 
@@ -351,15 +352,15 @@ void LSystem::Draw(std::string & outputFileName,char * instructions, Properties 
 
 	for (int i = 0; i < properties.angleFactor; i++)
 	{
-		tInfo.sin.push_back(*inc * std::sin(ang));
-		tInfo.cos.push_back(*inc * std::cos(ang));
 		ang += TWO_PI / properties.angleFactor;
-
 		tInfo.angle.push_back(ang);
 	}
+
+	turtle.xyplane = 4;
+	turtle.zplane = 4;
 	auto halfangFac = properties.angleFactor / 2;
 
-	turtle.direction = 0;
+ 
 
 	char * str = instructions;
 	char c;
@@ -369,35 +370,61 @@ void LSystem::Draw(std::string & outputFileName,char * instructions, Properties 
 		{
 		case '+':
 		{
-			if (turtle.direction < properties.angleFactor - 2)
+			if (turtle.xyplane < properties.angleFactor - 2)
 			{
-				turtle.direction++;
+				turtle.xyplane++;
 			}
 			else
 			{
-				turtle.direction = 0;
+				turtle.xyplane = 4;
 			}
 		}
 		break;
 
 		case '-':
 		{
-			if (turtle.direction > 0)
+			if (turtle.xyplane > 0)
 			{
-				turtle.direction--;
+				turtle.xyplane--;
 			}
 			else
 			{
-				turtle.direction = properties.angleFactor - 1;
+				turtle.xyplane = properties.angleFactor - 1;
 			}
 		}
 		break;
+		case '^':
+		{
+			if (turtle.zplane < properties.angleFactor - 2)
+			{
+				turtle.zplane++;
+			}
+			else
+			{
+				turtle.zplane = 4;
+			}
+		}
+		break;
+
+		case 'v':
+		{
+			if (turtle.zplane > 0)
+			{
+				turtle.zplane--;
+			}
+			else
+			{
+				turtle.zplane = properties.angleFactor - 1;
+			}
+		}
+		break;
+
 		case'|':
 		{
-			if (turtle.direction >= halfangFac) 
-				turtle.direction -= halfangFac; 
+			if (turtle.xyplane >= halfangFac) 
+				turtle.xyplane -= halfangFac; 
 			else 
-				turtle.direction += halfangFac;
+				turtle.xyplane += halfangFac;
 		}
 			break;
 		case '[':
@@ -420,11 +447,24 @@ void LSystem::Draw(std::string & outputFileName,char * instructions, Properties 
 		break;
 		case 'F':
 		{
-			os2 << 0 << "," << turtle[0] << "," << turtle[1] << "," << tInfo.cos[turtle.direction] << "," << tInfo.sin[turtle.direction] << "," << tInfo.angle[turtle.direction] * 180.0 / M_PI << std::endl;
+			auto angleXY = tInfo.angle[turtle.xyplane];
+			vtkQuaternion<double> qXY;
+			qXY.SetRotationAngleAndAxis(angleXY, 0, 0, 1);
+			auto qXYConj = qXY.Conjugated();
 
-			turtle[0] += tInfo.cos[turtle.direction];
-			turtle[1] += tInfo.sin[turtle.direction];
-			os2 << 1 << "," << turtle[0] << "," << turtle[1] << "," << tInfo.cos[turtle.direction] << "," << tInfo.sin[turtle.direction] << "," << tInfo.angle[turtle.direction] * 180.0 / M_PI << std::endl;
+			auto angleZ= tInfo.angle[turtle.zplane];
+			vtkQuaternion<double> qZ;
+			qZ.SetRotationAngleAndAxis(angleZ, 0, 1, 0);
+			auto qzConj = qZ.Conjugated();
+			 
+			vtkQuaternion<double> vec(0, 0, 1,0);
+			 
+			auto tVec = qZ * qXY * vec  *  qXYConj * qzConj;
+
+			turtle[0] += tVec.GetX();
+			turtle[1] += tVec.GetY();
+			turtle[2] += tVec.GetZ();
+		
 			turtle.Print(os, MoveOrDraw::Draw);
 		}
 		break;
@@ -432,10 +472,21 @@ void LSystem::Draw(std::string & outputFileName,char * instructions, Properties 
 
 		case 'f':
 		{
-			os2 << 2 << "," << turtle[0] << "," << turtle[1] << "," << tInfo.cos[turtle.direction] << "," << tInfo.sin[turtle.direction] << "," << tInfo.angle[turtle.direction] * 180.0 / M_PI << std::endl;
-			turtle[0] += tInfo.cos[turtle.direction];
-			turtle[1] += tInfo.sin[turtle.direction];
-			os2 << 3 << "," << turtle[0] << "," << turtle[1] << "," << tInfo.cos[turtle.direction] << "," << tInfo.sin[turtle.direction] << "," << tInfo.angle[turtle.direction] * 180.0 / M_PI << std::endl;
+			auto angleXY = tInfo.angle[turtle.xyplane];
+			vtkQuaternion<double> qXY;
+			qXY.SetRotationAngleAndAxis(angleXY, 0, 0, 1);
+			auto qXYConj = qXY.Conjugated();
+
+			auto angleZ = tInfo.angle[turtle.zplane];
+			vtkQuaternion<double> qZ;
+			qZ.SetRotationAngleAndAxis(angleZ, 0, 1, 0);
+			auto qzConj = qZ.Conjugated();
+
+			vtkQuaternion<double> vec(0, 0, 1, 0);
+
+			auto tVec = qZ * qXY * vec  *  qXYConj * qzConj;
+
+
 			turtle.Print(os, MoveOrDraw::Move);
 			
 		}
@@ -450,7 +501,7 @@ void LSystem::Draw(std::string & outputFileName,char * instructions, Properties 
 
 	for (size_t s = 0; s < tInfo.angle.size(); s++)
 	{
-		os3 << 1 << "," << tInfo.angle[s] << "," << 180 * tInfo.angle[s] / M_PI << "," << tInfo.cos[s] << "," << tInfo.sin[s] << "," << properties.angleFactor << std::endl;
+		os3 << 1 << "," << tInfo.angle[s] << "," << 180 * tInfo.angle[s] / M_PI << ","  << "," << properties.angleFactor << std::endl;
 
 	}
 	fb3.close();
