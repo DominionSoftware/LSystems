@@ -23,7 +23,7 @@ int main(int argc,char ** argv)
 		}
 		
 
-		for (int i = 0; i < 6; i++)
+		for (int i = 0; i < 1; i++)
 		{
 			LSystem ls;
 			std::experimental::filesystem::path inputPath(paths[i]);
@@ -31,7 +31,9 @@ int main(int argc,char ** argv)
 
 
 			ls.Read(paths[i]);
-			char * derived = ls.Derive();
+			Buffer<char> buffer(MAXSTR);
+
+			ls.Derive(buffer);
 			std::filebuf fb;
 
 
@@ -44,10 +46,14 @@ int main(int argc,char ** argv)
 
 			//fb.close();
 
+			char * b1;
+			char * b2;
+			std::tie(b1, b2) = buffer.GetBasePointers();
+
 
 			Box box;
 			int inc = 1;
-			ls.Draw(inputFileName + ".out.txt", derived + 1, ls.properties, box, &inc, 0);
+			ls.Draw(inputFileName + ".out.txt", b1, ls.properties, box, &inc, 0);
 
 
 			Pixel start;
@@ -55,8 +61,8 @@ int main(int argc,char ** argv)
 			start.v = 0;
 
 			ls.SetDrawParam(box, &inc, &start);
-			ls.Draw(inputFileName + ".out.txt", derived + 1, ls.properties, box, &inc, 1);
-			delete[] derived;
+			ls.Draw(inputFileName + ".out.txt", b1, ls.properties, box, &inc, 1);
+	
 
 		}
 	}

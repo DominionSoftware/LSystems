@@ -157,6 +157,7 @@ public:
         }
     }
 private:
+
     char * skipleft(char *s)
     {
         int level = 0;
@@ -166,8 +167,7 @@ private:
             switch (*s)
             {
                 case ']':
-                    ++
-                            level;
+                    ++level;
                     break;
                 case '[':
                     if (level == 0)
@@ -176,8 +176,7 @@ private:
                     }
                     else
                     {
-                        --
-                                level;
+						--level;
                     }
                     break;
                 default:

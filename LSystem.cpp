@@ -11,12 +11,17 @@
 #include <fstream> 
 #include "TransformInfo.h"
 #include "vtkQuaternion.h"
+#include "Buffer.h"
 
 #pragma optimize("",off)
 
 LSystem::LSystem()
 {
+	
 
+	std::string output3 = R"(C:\Users\rickf\Documents\MATLAB\debug.txt)";
+
+	debug.open(output3.c_str(), std::ios::out);
 }
 
 double LSystem::ParseNumber(std::string & s)
@@ -76,15 +81,15 @@ Production LSystem::GetProductions(std::string & line)
 
 
 
-Production *LSystem::FindProd(char *curPtr)
+Production *LSystem::FindProd(Buffer<char> & buffer)
 {
     for (size_t i = 0; i < productions.size(); i++)
     {
-        bool pf = productions[i].predecessorDifferent(curPtr);
+        bool pf = productions[i].predecessorDifferent(buffer.curPtr);
         bool rc = productions[i].rightContextDifferent(this->properties.ignoreMap,
-                curPtr + productions[i].predecessorLength());
+			buffer.curPtr + productions[i].predecessorLength());
 
-        bool lc = productions[i].leftContextDifferent(this->properties.ignoreMap,curPtr-1);
+        bool lc = productions[i].leftContextDifferent(this->properties.ignoreMap, buffer.curPtr -1);
 
         if (pf || rc || lc)
         {
@@ -97,31 +102,45 @@ Production *LSystem::FindProd(char *curPtr)
     }
     return (nullptr);
 }
+void LSystem::ApplyProduction(Buffer<char> * buffer, Production *prodPtr)
+{
+
+	std::ostream os(&debug);
+	if (prodPtr != NULL)
+	{
+		os << "production " << prodPtr->getLeftContext() << "," << prodPtr->getPredecessor() << "," << prodPtr->getRightContext() << "," << prodPtr->getSuccessor() << std::endl;
+		os << "current " << std::string(buffer->curPtr) << std::endl;
+		os << "left " << std::string(buffer->curPtr-1) << std::endl;
+		os << "right " << std::string(buffer->curPtr + prodPtr->predecessorLength()) << std::endl;
 
 
-void LSystem::ApplyProduction(char **curHandle, char **nextHandle, Production *prodPtr)
-{
-if (prodPtr != NULL)
-{
-    //printf("%s\n",*nextHandle);
-    strcpy(*nextHandle, prodPtr->getSuccessor());
-	//printf("%s\n", *nextHandle);
-    *curHandle += prodPtr->predecessorLength();
-    *nextHandle += prodPtr->successorLength();
+		os << "next " << std::string(buffer->nextPtr-1) << std::endl;
+		std::memcpy(buffer->nextPtr, prodPtr->getSuccessor(), prodPtr->successorLength());
+		os << "next " << std::string(buffer->nextPtr-1) << std::endl;
+		os << "full1 " << std::string(buffer->buffer1+1) << std::endl;
+		os << "full2 " << std::string(buffer->buffer2 + 1) << std::endl;
+		buffer->curPtr += prodPtr->predecessorLength();
+		buffer->nextPtr += prodPtr->successorLength();
+	}
+	else
+	{
+		//os << std::string(buffer->nextPtr) << std::endl;
+		*buffer->nextPtr = *buffer->curPtr;
+		//os << std::string(buffer->nextPtr) << std::endl;
+		buffer->nextPtr++;
+		buffer->curPtr++;
+	
+	}
+
+
+	if (buffer->nextPtr > buffer->limPtr)
+	{
+		throw std::runtime_error("String too long.");
+	 
+	}
+	*buffer->nextPtr = 0;
 }
-else
-    {
-  //  printf("%s\n",*nextHandle);
-    **nextHandle = **curHandle;
-    //printf("%s\n",*nextHandle);
-    ++(*nextHandle);
-    ++(*curHandle);
-  //  printf("%s\n",*nextHandle);
-  //  printf("%s\n",*curHandle);
-    }
-}
-#define MAXSTR 30000
-#define MAXAXIOM 100;
+
 
 const int LEFT = 2;
 const int TOP = 42;
@@ -129,62 +148,41 @@ const int RIGHT = 510;
 const int BOTTOM = 340;
 
 
-char * LSystem::Derive()
+void LSystem::Derive(Buffer<char> & buffer)
 {
-    int n = (int)this->properties.length;
+	auto n = static_cast<int>(this->properties.length);
     std::string curr = this->properties.axiom;
-	char * string1 = new char[MAXSTR];
-	char * string2 = new char[MAXSTR];
- 
+	char * s1;
+	char * s2;
+	std::tie(s1, s2) = buffer.GetBasePointers();
+    std::memcpy(s1, properties.axiom.c_str(), properties.axiom.length());
 	 
-    
-	auto s1 = string1;
-	auto s2 = string2;
-
-    for (int i=0; i < MAXSTR; i++)
-        *(s1+i) = *(s2+i) = 0;
-
-    ++s1;
-    ++s2;
-    strcpy(s1, properties.axiom.c_str());
-	char *curPtr;
-	char *nextPtr;
-	char *tempPtr;
-	char *limPtr;
-	limPtr = s2 + MAXSTR - MAXAXIOM;
+	
     for (auto i = 1; i <= n; i++)
     {
-        curPtr = s1;
-        nextPtr = s2;
+		{
+			std::ostream os(&debug);
+			os << "top " << std::endl;
+			os << "full1 " << std::string(buffer.buffer1+1) << std::endl;
+			os << "full2 " << std::string(buffer.buffer2 + 1) << std::endl;
+		}
+
+		buffer.curPtr = s1;
+		buffer.nextPtr = s2;
       
-        while (*curPtr != 0) {
-			//printf("%s\n", curPtr);
-            auto p = FindProd(curPtr);
-            ApplyProduction(&curPtr, &nextPtr, p);
-            if(nextPtr > limPtr) {
-                printf("String too long");
-                exit(1);
-            }
-            *nextPtr = 0;
+        while (*buffer.curPtr != 0) {
+            auto p = FindProd(buffer);
+			ApplyProduction(&buffer, p);
+			
         }
-        tempPtr = s1;
+		
+
+		char * tempPtr = s1;
 		s1 = s2;
         s2 = tempPtr;
     }
-	delete[] string2;
 
-    return(string1);
 }
-const std::string OR = "|";
-
-const std::string asterisk = "\\*";
-const std::string plusOrMinus = "\\+|\\-";
-const std::string decumalRange = "[0-9]";
-const std::string contextRegExp = "(" + asterisk + OR + plusOrMinus + OR + decumalRange + ")";
-
-const std::string successorRegExp = contextRegExp + OR + "\\F" + OR + "\\[" + OR + "\\]";
-const std::string whiteSpace = "\\s*";
-const std::string productionRegExp = contextRegExp + whiteSpace + "<" + contextRegExp + whiteSpace + ">" + whiteSpace + "-->" + successorRegExp;
 
 
 void LSystem::Read(const char *path)
@@ -203,8 +201,6 @@ void LSystem::Read(const char *path)
     {
         bool foundmatch = false;
         try {
-			const char * s = productionRegExp.c_str();
-
             std::regex re("(\\*|[0-9])\\s*<\\s*(\\v|\\^|\\-|\\+|[0-9])\\s*>\\s*(\\*|[0-9])\\s*-->\\s*(\\[|\\]|F|\\-|\\+|\\^|\\v|[0-9])\\s*");
 			std::smatch match;
             foundmatch = std::regex_search(line, match,re);
